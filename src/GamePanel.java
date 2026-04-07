@@ -42,7 +42,7 @@ public class GamePanel extends JPanel implements KeyListener {
     int explosionY = 0;
     int explosionTimer = 0;
     static int groundY = 220;
-    int SAFE_ZONE = 140;
+    int SAFE_ZONE = 150;
 
     int hudX = 5;
     int hudY = 5;
@@ -115,9 +115,10 @@ public class GamePanel extends JPanel implements KeyListener {
     }
     public GamePanel() {
 
-        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        BASE_WIDTH = screen.width;
-        BASE_HEIGHT = screen.height;
+        BASE_WIDTH = 1280;
+        BASE_HEIGHT = 720;
+
+        setPreferredSize(new Dimension(BASE_WIDTH, BASE_HEIGHT));
 
         // seed random theo level
         rand = new Random(level * 999 + 7);
@@ -265,6 +266,9 @@ public class GamePanel extends JPanel implements KeyListener {
             else if(type == 10|| (luckyBoost && type == 11)){
 
                 item = new game.Diamond(x,y);
+
+                // tạo đá bảo vệ kim cương
+                spawnDiamondGuard(x,y);
             }
 
             else{
@@ -327,6 +331,12 @@ public class GamePanel extends JPanel implements KeyListener {
         items.add(new game.Stone(x - 70, y - 80, 2));
         items.add(new game.Stone(x + 70, y - 80, 2));
         items.add(new game.Stone(x, y - 130, 2));
+    }
+    void spawnDiamondGuard(int x,int y){
+
+        // 2 viên đá bảo vệ kim cương
+        items.add(new game.Stone(x - 80, y - 80, 2));
+        items.add(new game.Stone(x + 80, y - 80, 2));
     }
     void spawnGoldCluster(int x,int y){
 
@@ -459,7 +469,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         rand = new Random(level * 999 + 7);
 
-        timeLeft = 60;
+        timeLeft = 35;
 
         speedBoost = nextLevelSpeedBoost;   // áp dụng potion cho level mới
         nextLevelSpeedBoost = false;
@@ -620,7 +630,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // ===== PLAYER =====
         int minerX = player.x - 70;
-        int minerY = groundY - 110;
+        int minerY = groundY - 140;
 
         gameGraphics.drawImage(
                 player.minerImage,
@@ -633,7 +643,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // ===== ROPE (thả từ đít xe) =====
         int ropeAnchorX = player.x;
-        int ropeAnchorY = groundY - 20;
+        int ropeAnchorY = groundY - 45;
 
         double dx = hook.x - ropeAnchorX;
         double dy = hook.y - ropeAnchorY;

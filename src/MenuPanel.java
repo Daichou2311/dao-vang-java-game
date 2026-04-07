@@ -1,9 +1,10 @@
 package game;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
-import javax.sound.sampled.*;
-import java.io.File;
 
 public class MenuPanel extends JPanel {
 
@@ -32,8 +33,9 @@ public class MenuPanel extends JPanel {
     float glow = 0;
     boolean glowDir = true;
 
-//    int mouseX = 0;
-//    int mouseY = 0;
+    int mouseX = 0;
+    int mouseY = 0;
+
     public MenuPanel(GameFrame frame) {
 
         this.frame = frame;
@@ -54,23 +56,23 @@ public class MenuPanel extends JPanel {
         add(guide);
         add(exit);
 
-        start.setBounds(923, 343, 260, 60);
-        guide.setBounds(923, 418, 260, 60);
-        soundBtn.setBounds(923, 490, 260, 60);
-        exit.setBounds(923, 560, 260, 60);
+        start.setBounds(733, 289, 260, 60);
+        guide.setBounds(733, 353, 260, 60);
+        soundBtn.setBounds(733, 419, 260, 60);
+        exit.setBounds(733, 480, 260, 60);
 
         start.addActionListener(e -> frame.startGame());
         guide.addActionListener(e -> showGuide());
         exit.addActionListener(e -> System.exit(0));
 
         playMenuSound();
-//        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-//            public void mouseMoved(java.awt.event.MouseEvent e) {
-//                mouseX = e.getX();
-//                mouseY = e.getY();
-//                repaint();
-//            }
-//        });
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                mouseX = e.getX();
+                mouseY = e.getY();
+                repaint();
+            }
+        });
     }
 
     JButton createButton(String text) {
@@ -97,7 +99,11 @@ public class MenuPanel extends JPanel {
                 btn.setForeground(Color.YELLOW);
                 btn.setFont(new Font("Arial", Font.BOLD, 24));
 
-                btn.setText("<html><b><font color='yellow'>" + text + "</font></b></html>");
+                if (btn == soundBtn) {
+                    updateSoundButton(true); // 👈 dùng state thật
+                } else {
+                    btn.setText("<html><b><font color='yellow'>" + text + "</font></b></html>");
+                }
 
                 Point p = btn.getLocation();
 
@@ -114,7 +120,12 @@ public class MenuPanel extends JPanel {
 
                 btn.setForeground(new Color(255, 230, 120));
                 btn.setFont(new Font("Arial", Font.BOLD, 22));
-                btn.setText(text);
+
+                if(btn == soundBtn){
+                    updateSoundButton(false); // 👈 giữ đúng trạng thái
+                }else{
+                    btn.setText(text);
+                }
 
                 if (shakeTimer != null) {
                     shakeTimer.stop();
@@ -150,20 +161,36 @@ public class MenuPanel extends JPanel {
 
         soundOn = !soundOn;
 
-        if (soundOn) {
-            soundBtn.setText("SOUND: ON");
-
-            if (menuMusic != null) {
+        if (menuMusic != null) {
+            if (soundOn) {
+                menuMusic.setFramePosition(0);
                 menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            } else {
+                menuMusic.stop();
+            }
+        }
+
+        updateSoundButton(false); // 👈 update UI
+    }
+
+    void updateSoundButton(boolean hover) {
+
+        if (soundOn) {
+
+            if (hover) {
+                soundBtn.setText("<html><b><font color='yellow'>SOUND: ON</font></b></html>");
+            } else {
+                soundBtn.setText("SOUND: ON");
             }
 
         } else {
 
-            soundBtn.setText("SOUND: OFF");
-
-            if (menuMusic != null) {
-                menuMusic.stop();
+            if (hover) {
+                soundBtn.setText("<html><b><font color='yellow'>SOUND: OFF</font></b></html>");
+            } else {
+                soundBtn.setText("SOUND: OFF");
             }
+
         }
     }
 
@@ -189,7 +216,7 @@ public class MenuPanel extends JPanel {
         );
 
         g2.drawImage(bg, 0, 0, getWidth(), getHeight(), null);
-        int centerX = getWidth()/2;
+        int centerX = getWidth() / 2;
 
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Arial", Font.BOLD, 16));
