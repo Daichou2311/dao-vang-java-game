@@ -23,7 +23,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
     int score = 0;
 
-    int timeLeft = 60;
+    int timeLeft = 35;
     long lastTime = System.currentTimeMillis();
 
     game.Bomb bomb = null;
@@ -620,7 +620,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // ===== PLAYER =====
         int minerX = player.x - 70;
-        int minerY = groundY - 60;
+        int minerY = groundY - 110;
 
         gameGraphics.drawImage(
                 player.minerImage,
@@ -633,7 +633,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // ===== ROPE (thả từ đít xe) =====
         int ropeAnchorX = player.x;
-        int ropeAnchorY = groundY + 5;
+        int ropeAnchorY = groundY - 20;
 
         double dx = hook.x - ropeAnchorX;
         double dy = hook.y - ropeAnchorY;

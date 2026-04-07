@@ -117,7 +117,7 @@ public class Hook {
         // tính vị trí hook (PHẢI nằm trong update)
         // điểm neo dây (đít xe)
         int ropeAnchorX = player.x;
-        int ropeAnchorY = GamePanel.groundY + 5;
+        int ropeAnchorY = GamePanel.groundY - 20;
 
 // tính vị trí hook
         x = ropeAnchorX + Math.cos(angle) * length;
