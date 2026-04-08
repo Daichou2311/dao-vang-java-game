@@ -150,6 +150,7 @@ public class GamePanel extends JPanel implements KeyListener {
                     openingShop = true;     // khóa click
                     showNextLevelButton = false;
 
+                    timer.stop();
                     playWinAndOpenShop();
                 }
             }
@@ -467,10 +468,10 @@ public class GamePanel extends JPanel implements KeyListener {
 
                     SwingUtilities.invokeLater(() -> {
 
-                        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-                        frame.dispose();
-
-                        new GameFrame(); // quay về menu
+                        GameFrame frame = (GameFrame) SwingUtilities.getWindowAncestor(this);
+                        frame.setContentPane(new GameOverPanel(frame, score, level));
+                        frame.revalidate();
+                        frame.repaint();
 
                     });
 
@@ -523,6 +524,7 @@ public class GamePanel extends JPanel implements KeyListener {
         levelEnded = false;
 
         spawnItems();
+        hook = new Hook(player, this);
     }
     void explode(){
 
@@ -596,8 +598,16 @@ public class GamePanel extends JPanel implements KeyListener {
         mousePos.setBounds(10,10,200,30);
         panel.add(mousePos);
 
-        shop.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        shop.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         shop.setModal(true);
+        shop.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                nextLevel();
+                timer.start();
+                openingShop = false;
+            }
+        });
 
         int[][] slots = {
                 {280,180},

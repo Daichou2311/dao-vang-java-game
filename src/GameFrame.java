@@ -1,7 +1,6 @@
 package game;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class GameFrame extends JFrame {
 
@@ -12,28 +11,54 @@ public class GameFrame extends JFrame {
 
         setTitle("Gold Miner");
 
-        setSize(1280,720); // cửa sổ game
+        setSize(1280,720);
         setLocationRelativeTo(null);
         setResizable(false);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        menu = new MenuPanel(this);
-        add(menu);
+        showMenu();
 
         setVisible(true);
     }
 
+    public void showMenu(){
+
+        SoundManager.stopLoop();   // ⭐ tránh nhạc game chồng
+
+        menu = new MenuPanel(this);
+
+        setContentPane(menu);
+
+        revalidate();
+        repaint();
+
+        menu.playMenuSound();
+    }
+
     public void startGame(){
 
-        remove(menu);
-
         game = new GamePanel();
-        add(game);
+
+        setContentPane(game);
 
         revalidate();
         repaint();
 
         game.requestFocus();
+    }
+
+    public void showGameOver(int score, int level){
+
+        if(menu != null){
+            menu.stopMenuSound();   // ⭐ tắt nhạc menu
+        }
+
+        SoundManager.stopLoop();   // ⭐ tắt nhạc game
+
+        setContentPane(new GameOverPanel(this, score, level));
+
+        revalidate();
+        repaint();
     }
 }

@@ -48,7 +48,7 @@ public class MenuPanel extends JPanel {
 
         start = createButton("START GAME");
         guide = createButton("HOW TO PLAY");
-        soundBtn = createButton("SOUND: ON");
+        soundBtn = createButton("MUSIC: ON");
         add(soundBtn);
 
         soundBtn.addActionListener(e -> toggleSound());
@@ -67,7 +67,6 @@ public class MenuPanel extends JPanel {
         guide.addActionListener(e -> showGuide());
         exit.addActionListener(e -> System.exit(0));
 
-        playMenuSound();
         addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseMoved(java.awt.event.MouseEvent e) {
                 mouseX = e.getX();
@@ -148,6 +147,10 @@ public class MenuPanel extends JPanel {
 
         try {
 
+            if(menuMusic != null && menuMusic.isRunning()){
+                return; // tránh chạy lại nhạc
+            }
+
             AudioInputStream audio =
                     AudioSystem.getAudioInputStream(
                             getClass().getResource("/menu_music.wav"));
@@ -166,6 +169,14 @@ public class MenuPanel extends JPanel {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    void stopMenuSound(){
+
+        if(menuMusic != null && menuMusic.isRunning()){
+            menuMusic.stop();
+            menuMusic.close();
+            menuMusic = null;
         }
 
     }
@@ -208,17 +219,17 @@ public class MenuPanel extends JPanel {
         if (soundOn) {
 
             if (hover) {
-                soundBtn.setText("<html><b><font color='yellow'>SOUND: ON</font></b></html>");
+                soundBtn.setText("<html><b><font color='yellow'>MUSIC: ON</font></b></html>");
             } else {
-                soundBtn.setText("SOUND: ON");
+                soundBtn.setText("MUSIC: ON");
             }
 
         } else {
 
             if (hover) {
-                soundBtn.setText("<html><b><font color='yellow'>SOUND: OFF</font></b></html>");
+                soundBtn.setText("<html><b><font color='yellow'>MUSIC: OFF</font></b></html>");
             } else {
-                soundBtn.setText("SOUND: OFF");
+                soundBtn.setText("MUSIC: OFF");
             }
 
         }
