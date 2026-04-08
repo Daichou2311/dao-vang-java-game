@@ -3,6 +3,7 @@ package game;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 
@@ -28,6 +29,7 @@ public class MenuPanel extends JPanel {
 
     Clip menuMusic;
     boolean soundOn = true;
+    Clip clickSound;
     JButton soundBtn;
     Timer animationTimer;
     float glow = 0;
@@ -92,8 +94,14 @@ public class MenuPanel extends JPanel {
         btn.setHorizontalAlignment(SwingConstants.CENTER);
         btn.setBorder(BorderFactory.createEmptyBorder(0, 40, 0, 0));
 
+
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
 
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+
+                SoundManager.play("/button-press.wav");
+
+            }
             public void mouseEntered(java.awt.event.MouseEvent evt) {
 
                 btn.setForeground(Color.YELLOW);
@@ -147,9 +155,31 @@ public class MenuPanel extends JPanel {
             menuMusic = AudioSystem.getClip();
             menuMusic.open(audio);
 
+            FloatControl gainControl =
+                    (FloatControl) menuMusic.getControl(FloatControl.Type.MASTER_GAIN);
+
+            gainControl.setValue(-15f);
+
             if (soundOn) {
                 menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    void playClickSound() {
+
+        try {
+
+            AudioInputStream audio =
+                    AudioSystem.getAudioInputStream(
+                            getClass().getResource("/button-press.wav"));
+
+            clickSound = AudioSystem.getClip();
+            clickSound.open(audio);
+            clickSound.start();
 
         } catch (Exception e) {
             e.printStackTrace();

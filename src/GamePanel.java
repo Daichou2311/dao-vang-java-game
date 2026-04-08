@@ -59,6 +59,8 @@ public class GamePanel extends JPanel implements KeyListener {
 
     boolean levelEnded = false;
     boolean showNextLevelButton = false;
+    boolean hookReady = true;
+    boolean levelSoundPlayed = false;
     Rectangle nextLevelButton = new Rectangle(0,0,200,60);
     ArrayList<game.ShopItem> generateShopItems(){
 
@@ -131,13 +133,18 @@ public class GamePanel extends JPanel implements KeyListener {
         hook = new game.Hook(player, this);
 
         addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+
+                SoundManager.play("/button-press.wav");
+
+            }
             public void mouseClicked(MouseEvent e){
 
                 if(showNextLevelButton && nextLevelButton.contains(e.getPoint())){
 
                     showNextLevelButton = false;
 
-                    openShop();   // mở shop trước
+                    playWinAndOpenShop();
                 }
             }
         });
@@ -362,12 +369,18 @@ public class GamePanel extends JPanel implements KeyListener {
             timeLeft--;
             lastTime = now;
 
+            if(timeLeft == 5){
+                SoundManager.play("/5s.wav");
+            }
+
             if(timeLeft < 0){
                 timeLeft = 0;
             }
         }
         hook.update();
-
+        if(!hook.throwing && !hook.retracting){
+            hookReady = true;
+        }
         for(game.Item item : items){
 
             if(!item.collected && hook.checkCollision(item)){
@@ -381,7 +394,6 @@ public class GamePanel extends JPanel implements KeyListener {
                     }
 
                 }else{
-
                     hook.attachItem(item);
                 }
             }
@@ -391,7 +403,8 @@ public class GamePanel extends JPanel implements KeyListener {
         }
 
         if(hook.returnedItem != null){
-
+            hookReady = true;
+            SoundManager.stopLoop();
             game.Item item = hook.returnedItem;
 
             if(item instanceof game.TNT){
@@ -413,6 +426,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
             if(!item.collected){
                 score += item.value;
+                SoundManager.play("/Tien.wav");
                 item.collected = true;
             }
 
@@ -429,9 +443,13 @@ public class GamePanel extends JPanel implements KeyListener {
             levelEnded = true;
 
             if(score >= targetScore){
-                openShop();   // tự qua màn
+                playWinAndOpenShop();  // tự qua màn
             }
             else{
+                SoundManager.play("/lose.wav");
+                try{
+                    Thread.sleep(1200);
+                }catch(Exception e){}
                 JOptionPane.showMessageDialog(this,"You Lose!");
                 System.exit(0);
             }
@@ -445,7 +463,7 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
     void explodeTNT(int x,int y){
-
+        SoundManager.play("/bomb.wav");
         explosionX = x;
         explosionY = y;
         explosionTimer = 30;
@@ -463,6 +481,7 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
     void nextLevel(){
+        // dừng âm thanh kéo hook
 
         level++;
         targetScore += 400 + level*150;
@@ -487,6 +506,8 @@ public class GamePanel extends JPanel implements KeyListener {
 
         bombs--;
 
+        SoundManager.play("/bomb.wav");
+
         bomb = new game.Bomb((int)hook.x,(int)hook.y);
         bombTimer = 20;   // hiệu ứng tồn tại 20 frame
 
@@ -509,6 +530,22 @@ public class GamePanel extends JPanel implements KeyListener {
             }
         }
     }
+    void playWinAndOpenShop(){
+
+        SoundManager.stopLoop();
+        SoundManager.play("/quaman.wav");
+
+        // đợi âm thanh chạy xong
+        new Thread(() -> {
+
+            try{
+                Thread.sleep(3000); // thời gian âm thanh ~2s
+            }catch(Exception e){}
+
+            SwingUtilities.invokeLater(() -> openShop());
+
+        }).start();
+    }
     void openShop(){
         timer.stop();
         showNextLevelButton = false;
@@ -518,6 +555,11 @@ public class GamePanel extends JPanel implements KeyListener {
         shop.setTitle("SHOP");
         shop.setSize(500,300);
         shop.setLayout(new GridLayout(2,3,10,10));
+        // ❌ không cho tắt bằng nút X
+        shop.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+// bắt buộc người chơi xử lý shop
+        shop.setModal(true);
 
         for(game.ShopItem item : items){
 
@@ -765,7 +807,14 @@ public class GamePanel extends JPanel implements KeyListener {
     public void keyPressed(KeyEvent e) {
 
         if(e.getKeyCode() == KeyEvent.VK_SPACE){
-            hook.throwHook();
+
+            if(hookReady){
+
+                hook.throwHook();
+
+                hookReady = false;
+
+            }
         }
 
         if(e.getKeyCode() == KeyEvent.VK_Q){

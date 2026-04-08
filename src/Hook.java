@@ -170,8 +170,15 @@ public class Hook {
             attachedItem = item;
             retracting = true;
 
-        }
+            if(item instanceof Gold){
+                SoundManager.play("/Gold.wav");
+            }
 
+            if(item instanceof Stone){
+                SoundManager.play("/keoda.wav");
+            }
+
+        }
     }
 
 }
