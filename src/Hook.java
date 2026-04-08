@@ -177,6 +177,12 @@ public class Hook {
             if(item instanceof Stone){
                 SoundManager.play("/keoda.wav");
             }
+            else if(item instanceof Diamond){
+                SoundManager.play("/Gold.wav");
+            }
+            else if(item instanceof LuckyBox){
+                SoundManager.play("/Gold.wav");
+            }
 
         }
     }

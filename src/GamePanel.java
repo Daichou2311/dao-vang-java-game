@@ -36,6 +36,10 @@ public class GamePanel extends JPanel implements KeyListener {
     Image explosionImage = new ImageIcon("src/Nobom.png").getImage();
     Image ropeImage = new ImageIcon("src/rope.png").getImage();
     Image background = new ImageIcon("src/backgroundgame.png").getImage();
+    Image shopImage = new ImageIcon("src/shop.png").getImage();
+    Image potionspeedImage = new ImageIcon("src/potionspeed.png").getImage();
+    Image potionluckyImage = new ImageIcon("src/potionlucky.png").getImage();
+    Image stoneImage = new ImageIcon("src/stoneboots.png").getImage();
 
 
     int explosionX = 0;
@@ -61,6 +65,7 @@ public class GamePanel extends JPanel implements KeyListener {
     boolean showNextLevelButton = false;
     boolean hookReady = true;
     boolean levelSoundPlayed = false;
+    boolean openingShop = false;
     Rectangle nextLevelButton = new Rectangle(0,0,200,60);
     ArrayList<game.ShopItem> generateShopItems(){
 
@@ -92,7 +97,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 shopItems.add(new game.ShopItem(
                         "Lucky Potion",
                         150 + r.nextInt(100),
-                        null
+                        potionluckyImage
                 ));
             }
 
@@ -100,7 +105,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 shopItems.add(new game.ShopItem(
                         "Speed Potion",
                         200 + r.nextInt(120),
-                        null
+                        potionspeedImage
                 ));
             }
 
@@ -108,7 +113,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 shopItems.add(new game.ShopItem(
                         "Stone Boost",
                         120 + r.nextInt(100),
-                        null
+                        stoneImage
                 ));
             }
         }
@@ -140,8 +145,9 @@ public class GamePanel extends JPanel implements KeyListener {
             }
             public void mouseClicked(MouseEvent e){
 
-                if(showNextLevelButton && nextLevelButton.contains(e.getPoint())){
+                if(showNextLevelButton && nextLevelButton.contains(e.getPoint()) && !openingShop){
 
+                    openingShop = true;     // khóa click
                     showNextLevelButton = false;
 
                     playWinAndOpenShop();
@@ -167,7 +173,7 @@ public class GamePanel extends JPanel implements KeyListener {
             double dist = Math.sqrt(dx*dx + dy*dy);
 
             // nếu khoảng cách nhỏ hơn tổng bán kính
-            if(dist < radius + item.hitRadius + 20){
+            if(dist < radius + item.hitRadius + 25){
                 return true;
             }
         }
@@ -279,6 +285,8 @@ public class GamePanel extends JPanel implements KeyListener {
             }
 
             else{
+
+                if(isTooClose(x,y,80)) continue;  // tránh spawn chồng lên item khác
 
                 item = new game.TNT(x,y);
             }
@@ -394,10 +402,12 @@ public class GamePanel extends JPanel implements KeyListener {
                     }
 
                 }else{
+
+                    if(hook.attachedItem == null)
                     hook.attachItem(item);
                 }
+                }
             }
-        }
         if(explosionTimer > 0){
             explosionTimer--;
         }
@@ -443,15 +453,29 @@ public class GamePanel extends JPanel implements KeyListener {
             levelEnded = true;
 
             if(score >= targetScore){
-                playWinAndOpenShop();  // tự qua màn
+                playWinAndOpenShop();
             }
             else{
+                SoundManager.stopLoop();
                 SoundManager.play("/lose.wav");
-                try{
-                    Thread.sleep(1200);
-                }catch(Exception e){}
-                JOptionPane.showMessageDialog(this,"You Lose!");
-                System.exit(0);
+
+                new Thread(() -> {
+
+                    try{
+                        Thread.sleep(4500);
+                    }catch(Exception e){}
+
+                    SwingUtilities.invokeLater(() -> {
+
+                        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+                        frame.dispose();
+
+                        new GameFrame(); // quay về menu
+
+                    });
+
+                }).start();
+
             }
         }
         if(bombTimer > 0){
@@ -547,28 +571,57 @@ public class GamePanel extends JPanel implements KeyListener {
         }).start();
     }
     void openShop(){
+
         timer.stop();
         showNextLevelButton = false;
+
         ArrayList<game.ShopItem> items = generateShopItems();
 
         JDialog shop = new JDialog();
         shop.setTitle("SHOP");
-        shop.setSize(500,300);
-        shop.setLayout(new GridLayout(2,3,10,10));
-        // ❌ không cho tắt bằng nút X
-        shop.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        shop.setSize(1280,720);
 
-// bắt buộc người chơi xử lý shop
+        JPanel panel = new JPanel(){
+            protected void paintComponent(Graphics g){
+                super.paintComponent(g);
+                g.drawImage(shopImage,0,0,getWidth(),getHeight(),null);
+            }
+        };
+
+        panel.setLayout(null);
+        shop.setContentPane(panel);
+
+        JLabel mousePos = new JLabel("x:0 y:0");
+        mousePos.setForeground(Color.WHITE);
+        mousePos.setBounds(10,10,200,30);
+        panel.add(mousePos);
+
+        shop.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         shop.setModal(true);
+
+        int[][] slots = {
+                {280,180},
+                {450,180},
+                {680,180},
+                {890,180},
+                {700,380}
+        };
+
+        int i = 0;
 
         for(game.ShopItem item : items){
 
-            JButton btn = new JButton(
-                    "<html><center>"+item.name+
-                            "<br>"+item.price+"$</center></html>"
-            );
+            Image img = item.icon.getScaledInstance(80,80,Image.SCALE_SMOOTH);
+            JButton btn = new JButton(new ImageIcon(img));
 
-            btn.setFont(new Font("Arial",Font.BOLD,14));
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+
+            btn.setBounds(slots[i][0],slots[i][1],90,90);
+
+            btn.setToolTipText(item.name + " - " + item.price + "$");
 
             btn.addActionListener(e -> {
 
@@ -576,8 +629,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
                     score -= item.price;
 
-                    if(item.name.equals("Bomb"))
-                        bombs++;
+                    if(item.name.equals("Bomb")) bombs++;
 
                     if(item.name.equals("Lucky Potion"))
                         nextLevelLuckyBoost = true;
@@ -593,24 +645,29 @@ public class GamePanel extends JPanel implements KeyListener {
                 else{
                     JOptionPane.showMessageDialog(shop,"Not enough money!");
                 }
+
             });
 
-            shop.add(btn);
+            panel.add(btn);
+
+            i++;
         }
 
-        JButton skip = new JButton("Skip");
+        JButton skip = new JButton("SKIP");
+
+        skip.setBounds(560,580,160,60);
 
         skip.addActionListener(e -> {
             shop.dispose();
             nextLevel();
             timer.start();
+            openingShop = false;
         });
 
-        shop.add(skip);
+        panel.add(skip);
 
         shop.setLocationRelativeTo(null);
         shop.setVisible(true);
-
     }
     void openLuckyBox(){
 
